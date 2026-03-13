@@ -1,6 +1,51 @@
-# Hypercore
+# Hypercore (Pruned Edition)
+
+> **This is a fork of [holepunchto/hypercore](https://github.com/holepunchto/hypercore) with pruned/lazy-load mode support.**
 
 ### [See the full API docs at docs.pears.com](https://docs.pears.com/building-blocks/hypercore)
+
+## Pruned Mode
+
+This fork adds `onBlockMissing` callback support, enabling storage-efficient hosting where:
+
+- Blocks can be cleared from storage after writing (save 99%+ storage)
+- Blocks are restored on-demand when a peer requests them
+- Fully backwards compatible with standard Hypercore
+
+### Usage
+
+```js
+const Hypercore = require('@peardrive/hypercore')
+
+const core = new Hypercore('./storage', {
+  onBlockMissing: async (index, core) => {
+    // Called when a peer requests a block we don't have
+    // Restore the block from your source (filesystem, S3, etc.)
+    const data = await readBlockFromSource(index)
+    
+    // Write it back to the core
+    // (Implementation depends on your restoration strategy)
+    await restoreBlock(core, index, data)
+  }
+})
+```
+
+### How It Works
+
+1. Write data to Hypercore normally
+2. Clear blocks with `core.clear(start, end)`
+3. When a peer requests cleared blocks, `onBlockMissing` is called
+4. Your callback restores the block from the original source
+5. Block is served to the peer
+6. Optionally clear again after serving
+
+### Storage Savings
+
+For a 200GB file:
+- **Without pruning:** ~400GB (original + Hypercore copy)
+- **With pruning:** ~200.4GB (original + ~0.2% metadata)
+
+---
 
 Hypercore is a secure, distributed append-only log.
 

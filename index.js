@@ -78,6 +78,7 @@ class Hypercore extends EventEmitter {
     this.snapshotted = !!opts.snapshot
     this.onseq = opts.onseq || null
     this.onwait = opts.onwait || null
+    this.onBlockMissing = opts.onBlockMissing || null  // Pruned mode: restore blocks on-demand
     this.wait = opts.wait !== false
     this.timeout = opts.timeout || 0
     this.preload = null
@@ -1262,7 +1263,8 @@ function initOnce(session, storage, key, opts) {
     keyPair: opts.keyPair,
     legacy: opts.legacy,
     manifest: opts.manifest,
-    globalCache: opts.globalCache || null // session is a temp option, not to be relied on unless you know what you are doing (no semver guarantees)
+    globalCache: opts.globalCache || null, // session is a temp option, not to be relied on unless you know what you are doing (no semver guarantees)
+    onBlockMissing: opts.onBlockMissing || null  // Pruned mode: restore blocks on-demand
   })
 }
 
